@@ -1,0 +1,45 @@
+services:
+  vault-server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: vault-server
+    restart: unless-stopped
+    expose:
+      - "3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DATABASE_PATH: /app/data/vault-guard.db
+      CORS_ORIGIN: http://localhost
+    volumes:
+      - vault_data:/app/data
+    networks:
+      - vault-net
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3001/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  vault-client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: vault-client
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      vault-server:
+        condition: service_healthy
+    networks:
+      - vault-net
+
+networks:
+  vault-net:
+    driver: bridge
+
+volumes:
+  vault_data:
