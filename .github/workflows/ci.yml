@@ -31,7 +31,7 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install workspace dependencies
-        run: npm install --no-audit --no-fund
+        run: rm -f package-lock.json && npm install --no-audit --no-fund
 
       - name: Typecheck all workspaces
         run: npm run typecheck
